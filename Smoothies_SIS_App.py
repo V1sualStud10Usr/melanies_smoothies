@@ -2,9 +2,10 @@
 # Import python packages
 import streamlit as st
 import datetime
-from snowflake.snowpark.context import get_active_session
+###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
 
+cnx =st.connection("snowflake")
 # create a function that sets the value in state back to an empty list
 ##To identify the element in the state do as in asp.net toi dentify the lement with the unique KEY 
 def clear_multi():
@@ -26,7 +27,8 @@ ColumToParse="FRUIT_NAME"
 MaxIngredients = 5
 NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
 
-session = get_active_session()
+###session = get_active_session()
+session=cnx.session()
 df = session.table("smoothies.public.fruit_options").select(col(ColumToParse))
 ###st.dataframe(data=df, use_container_width=True)
 container = st.container()
