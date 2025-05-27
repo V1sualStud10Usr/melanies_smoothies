@@ -5,7 +5,11 @@ import datetime
 ###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
 
-cnx =st.connection("snowflake")
+###session = get_active_session()
+### add the new connection string to be used in the active session instead
+cnx = st.connection("snowflake")
+session = cnx.session()
+
 # create a function that sets the value in state back to an empty list
 ##To identify the element in the state do as in asp.net toi dentify the lement with the unique KEY 
 def clear_multi():
@@ -28,7 +32,7 @@ MaxIngredients = 5
 NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
 
 ###session = get_active_session()
-session=cnx.session()
+###session=cnx.session()
 df = session.table("smoothies.public.fruit_options").select(col(ColumToParse))
 ###st.dataframe(data=df, use_container_width=True)
 container = st.container()
