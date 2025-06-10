@@ -29,7 +29,7 @@ st.write('You selected:', option)
 
 ColumToParse="FRUIT_NAME"
 MaxIngredients = 5
-NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
+NamedYourDrink = st.text_input("The Name on your Smoothie for reference: ",'')
 
 ###session = get_active_session()
 ###session=cnx.session()
