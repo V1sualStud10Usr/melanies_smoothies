@@ -1,0 +1,8 @@
+[connections.snowflake]
+account="UVJJQXL-LEB20091"
+user="gciaffon"
+password="Pd907p$n0wFl@k32528"
+Warehouse="COMPUTE_WH"
+database="SMOOTHIES"
+schema="PUBLIC"
+client_session_keep_alive=true
