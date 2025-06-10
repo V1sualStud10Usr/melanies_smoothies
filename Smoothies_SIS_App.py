@@ -7,7 +7,7 @@ from snowflake.snowpark.functions  import col
 
 ###session = get_active_session()
 ### add the new connection string to be used in the active session instead
-cnx = st.connection("snowflake")
+cnx = st.connection("smoothies")
 session = cnx.session()
 
 # create a function that sets the value in state back to an empty list
