@@ -1,14 +1,27 @@
 ######## Rememebr all this code is in a version of PYTHON #########
-# Import python packages
+### this section commented out to a convert SIS to SnIS solution ####
+### Import python packages 
+###import streamlit as st
+###import datetime
+###from snowflake.snowpark.context import get_active_session
+###from snowflake.snowpark.functions  import col
+
+###session = get_active_session()
+### add the new connection string to be used in the active session instead
+###cnx = st.connection("smothiesConstr", type="snowflake")
+###session = cnx.session()
+#############################################################################
+
+######## Rememebr all this code is in a version of PYTHON #########
+##### Import python packages
 import streamlit as st
 import datetime
 ###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
 
-###session = get_active_session()
-### add the new connection string to be used in the active session instead
-cnx = st.connection("smoothies")
+cnx = st.connection("smothieConnStr","snowflake")
 session = cnx.session()
+
 
 # create a function that sets the value in state back to an empty list
 ##To identify the element in the state do as in asp.net toi dentify the lement with the unique KEY 
