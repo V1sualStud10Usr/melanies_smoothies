@@ -1,10 +1,11 @@
 ######## Rememebr all this code is in a version of PYTHON #########
 ### this section commented out to a convert SIS to SnIS solution ####
 ### Import python packages 
-###import streamlit as st
-###import datetime
+##import streamlit as st
+##import datetime
+###import pandas
 ###from snowflake.snowpark.context import get_active_session
-###from snowflake.snowpark.functions  import col
+#from snowflake.snowpark.functions  import col
 
 ###session = get_active_session()
 ### add the new connection string to be used in the active session instead
@@ -16,6 +17,9 @@
 ##### Import python packages
 import streamlit as st
 import datetime
+import requests
+import pandas
+
 ###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
 
@@ -47,7 +51,10 @@ NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
 ###session = get_active_session()
 ###session=cnx.session()
 df = session.table("smoothies.public.fruit_options").select(col(ColumToParse))
-###st.dataframe(data=df, use_container_width=True)
+
+st.stop()
+
+
 container = st.container()
 allFruits = st.checkbox("Select all")
 if (allFruits):
@@ -65,7 +72,20 @@ if (selected_options):
     ingredients_list =''
     for fruit_selected in selected_options:
         ingredients_list+= fruit_selected + ' '
-    
+        st.subheader(fruit_selected + ' Nutrition Information')
+        webRestResponse = requests.get("https://my.smoothiefroot.com/api/fruit/" + fruit_selected)
+        st_df=st.dataframe(data=webRestResponse.json(), use_container_width=True)
+        st.text(st_df)
+        column_value= "something here"
+        st.write(column_value) ### same as st.dataframe(st_df)
+        if (column_value) : source = 'LocalTable'
+        else: source = 'APICall' 
+        UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
+                    values ('""" + source  + """')"""
+        st.write(UpdtSQlCmd)
+        ##temporary stop the code
+        st.stop()
+
     if ingredients_list:
         st.write(f"List :blue[{ingredients_list}] ")
         SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
@@ -81,6 +101,8 @@ if (selected_options):
             sucessMsg=(f"Your smoothie {NamedYourDrink} is ordered! {timestamp}")
             st.write(sucessMsg)
             st.success(sucessMsg, icon="✅") 
-        
+
+
+
 ##create your button to clear the state of the multiselect
 st.button("Clear form", on_click=clear_multi)
