@@ -19,8 +19,6 @@ import streamlit as st
 import datetime
 import requests
 import pandas as pd
-
-
 ###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
 
@@ -54,8 +52,6 @@ df = session.table("smoothies.public.fruit_options").select(col("FRUIT_NAME"),co
 
 pd_df=df.to_pandas()
 st.dataframe(pd_df)
-st.stop()
-
 
 container = st.container()
 allFruits = st.checkbox("Select all")
