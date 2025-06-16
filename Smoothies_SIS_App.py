@@ -1,7 +1,7 @@
 ######## Rememebr all this code is in a version of PYTHON #########
 ### this section commented out to a convert SIS to SnIS solution ####
 ### Import python packages 
-##import streamlit as st
+##import streamlit as st  ## This is s streamlit package running in python engine
 ##import datetime
 ###import pandas
 ###from snowflake.snowpark.context import get_active_session
@@ -18,7 +18,8 @@
 import streamlit as st
 import datetime
 import requests
-import pandas
+import pandas as pd
+
 
 ###from snowflake.snowpark.context import get_active_session
 from snowflake.snowpark.functions  import col
@@ -43,49 +44,47 @@ st.write('You selected:', option)
 ## option = st.selectbox("What is your favorite Fruit", ('Banana','Strawberries', 'Peaches'), index=0)
 ## st.write('Your favorite Fruit is:', option)
 
-
-ColumToParse="FRUIT_NAME"
 MaxIngredients = 5
 NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
 
 ###session = get_active_session()
 ###session=cnx.session()
-df = session.table("smoothies.public.fruit_options").select(col(ColumToParse))
+df = session.table("smoothies.public.fruit_options").select(col("FRUIT_NAME"),col("SEARCH_ON"))
+##st.dataframe(data=df, use_container_width=True)
 
+pd_df=df.to_pandas()
+st.dataframe(pd_df)
 st.stop()
 
 
 container = st.container()
 allFruits = st.checkbox("Select all")
 if (allFruits):
-    selected_options = container.multiselect("Select all:",df,df,key="iMultiSelect",max_selections=5)
+    selected_options = container.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
 else:
-    selected_options = container.multiselect("choose up to 5 ingredients:", df, key="iMultiSelect", max_selections=5)
+    selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
 
 ## check if the selected options array is empty
 if  len(selected_options) > MaxIngredients: 
     st.write(f"You selected more then 5 items :red[{len(selected_options)}]") 
     allFruits = False
+st.divider()
+if  st.toggle("Check Ingredients..."):
+    if (selected_options):
+        ingredients_list =''
+        for fruit_selected in selected_options:
+            ingredients_list+= fruit_selected + ' '
+            st.subheader(fruit_selected + ' Nutrition Information')
+            search_on=pd_df.loc[pd_df["FRUIT_NAME"] == fruit_selected, "SEARCH_ON"].iloc[0]
+            webRestResponse = requests.get("https://my.smoothiefroot.com/api/fruit/" + search_on)
+            st.write('The search value for ', fruit_selected, ' is ', search_on, '.')
 
-
-if (selected_options):
-    ingredients_list =''
-    for fruit_selected in selected_options:
-        ingredients_list+= fruit_selected + ' '
-        st.subheader(fruit_selected + ' Nutrition Information')
-        webRestResponse = requests.get("https://my.smoothiefroot.com/api/fruit/" + fruit_selected)
-        st_df=st.dataframe(data=webRestResponse.json(), use_container_width=True)
-        st.text(st_df)
-        column_value= "something here"
-        st.write(column_value) ### same as st.dataframe(st_df)
-        if (column_value) : source = 'LocalTable'
-        else: source = 'APICall' 
-        UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
-                    values ('""" + source  + """')"""
-        st.write(UpdtSQlCmd)
-        ##temporary stop the code
-        st.stop()
-
+            UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
+                            values ('""" + fruit_selected  + """')"""
+            st.write(UpdtSQlCmd)
+            ###session.sql(UpdtSQlCmd).collect()
+    ##temporary stop the code
+    st.divider()
     if ingredients_list:
         st.write(f"List :blue[{ingredients_list}] ")
         SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
