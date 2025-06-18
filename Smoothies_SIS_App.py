@@ -25,7 +25,6 @@ from snowflake.snowpark.functions  import col
 cnx = st.connection("smothieConnStr","snowflake")
 session = cnx.session()
 
-
 # create a function that sets the value in state back to an empty list
 ##To identify the element in the state do as in asp.net toi dentify the lement with the unique KEY 
 def clear_multi():
@@ -42,7 +41,6 @@ st.write('You selected:', option)
 ## option = st.selectbox("What is your favorite Fruit", ('Banana','Strawberries', 'Peaches'), index=0)
 ## st.write('Your favorite Fruit is:', option)
 
-MaxIngredients = 5
 NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
 
 ###session = get_active_session()
@@ -51,40 +49,36 @@ df = session.table("smoothies.public.fruit_options").select(col("FRUIT_NAME"),co
 ##st.dataframe(data=df, use_container_width=True)
 
 pd_df=df.to_pandas()
-st.dataframe(pd_df)
+###st.dataframe(pd_df)
 
 container = st.container()
 allFruits = st.checkbox("Select all")
 if (allFruits):
-    selected_options = container.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
+    ingredients_list = container.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
 else:
-    selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
+####    selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
+    ingredients_list = st.multiselect('Choose up to 5 ingredients:',df,max_selections=5)
 
 ## check if the selected options array is empty
-if  len(selected_options) > MaxIngredients: 
-    st.write(f"You selected more then 5 items :red[{len(selected_options)}]") 
-    allFruits = False
 st.divider()
 if  st.toggle("Check Ingredients..."):
-    if (selected_options):
-        ingredients_list =''
-        for fruit_selected in selected_options:
-            ingredients_list+= fruit_selected + ' '
+    ingredients_str=''
+    if (ingredients_list):
+        for fruit_selected in ingredients_list:
+            ingredients_str += fruit_selected + ' '
             st.subheader(fruit_selected + ' Nutrition Information')
             search_on=pd_df.loc[pd_df["FRUIT_NAME"] == fruit_selected, "SEARCH_ON"].iloc[0]
             webRestResponse = requests.get("https://my.smoothiefroot.com/api/fruit/" + search_on)
-            st.write('The search value for ', fruit_selected, ' is ', search_on, '.')
-
-            UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
-                            values ('""" + fruit_selected  + """')"""
-            st.write(UpdtSQlCmd)
-            ###session.sql(UpdtSQlCmd).collect()
-    ##temporary stop the code
-    st.divider()
-    if ingredients_list:
-        st.write(f"List :blue[{ingredients_list}] ")
-        SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
-                    values ('""" + ingredients_list + """','""" + NamedYourDrink + """')"""
+            if (webRestResponse.status_code != 200):
+                st.write('The search value for ', fruit_selected, ' is ', search_on, '.')
+                ingredients_list = st.dataframe(webRestResponse.json(),use_container_width=True)
+                UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
+                                values ('""" + fruit_selected  + """')"""
+                ##st.write(UpdtSQlCmd)
+                ###session.sql(UpdtSQlCmd).collect()
+            st.divider()
+            SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
+                    values ('""" + ingredients_str + """','""" + NamedYourDrink + """')"""
         ### Start the sql command to insert the rows
         st.write(SQlCmd)
         ### this is the command to stop further execution when troubleshooting
@@ -98,6 +92,5 @@ if  st.toggle("Check Ingredients..."):
             st.success(sucessMsg, icon="✅") 
 
 
-
-##create your button to clear the state of the multiselect
-st.button("Clear form", on_click=clear_multi)
+        ##create your button to clear the state of the multiselect
+        st.button("Clear form", on_click=clear_multi)
