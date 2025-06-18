@@ -31,10 +31,6 @@ def clear_form():
     st.session_state['iMultiSelect']= []
     return
 
-def reset_toggle():
-    st.session_state.theTaggle = False
-    return
-
 # Write directly to the app
 st.title(f":cup_with_straw: Customize Your Smoothie :cup_with_straw: {st.__version__}")
 st.write("""Choose the fruits you want in your custom smoothie!! """)
@@ -45,7 +41,7 @@ st.write('You selected:', option)
 ## option = st.selectbox("What is your favorite Fruit", ('Banana','Strawberries', 'Peaches'), index=0)
 ## st.write('Your favorite Fruit is:', option)
 
-NamedYourDrink = st.text_input("The Name on your Smoothie will be: ",'')
+NamedYourDrink = st.text_input("The Name on your Smoothie will be: ","Customer")
 
 ###session = get_active_session()
 ###session=cnx.session()
@@ -55,16 +51,13 @@ df = session.table("smoothies.public.fruit_options").select(col("FRUIT_NAME"),co
 pd_df=df.to_pandas()
 ###st.dataframe(pd_df) this is for view only
 
-container = st.container()
+###container = st.container()
 allFruits = st.checkbox("Select all")
 if (allFruits):
-    ingredients_list = container.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
+    ingredients_list = st.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
 else:
 ####    selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
     ingredients_list = st.multiselect('Choose up to 5 ingredients:',df,max_selections=5)
-
-if "TheToggle" not in st.session_state:
-    st.session_state.TheToggle = False
 
 ## check if the selected options array is empty
 st.divider()
@@ -73,34 +66,36 @@ if  st.toggle("Check Ingredients..."):
     if (ingredients_list):
         for fruit_selected in ingredients_list:
             ingredients_str += fruit_selected + ' '
-            search_on=pd_df.loc[pd_df["FRUIT_NAME"] == fruit_selected "SEARCH_ON"].iloc[0]
+            search_on=pd_df.loc[pd_df["FRUIT_NAME"] == fruit_selected , "SEARCH_ON"].iloc[0]
             st.write('search for:' + search_on)
             webRestResponse = requests.get("https://my.smoothiefroot.com/api/fruit/" + search_on.strip())
-            if (webRestResponse.status_code != 200):
+            if (webRestResponse.status_code == 200):
                 st.subheader(fruit_selected + ' Nutrition Information')
                 st.write('The search value for ', fruit_selected, ' is ', search_on, '.')
                 ingredients_list = st.dataframe(webRestResponse.json(),use_container_width=True)
                 UpdtSQlCmd= """ Update smoothies.public.fruit_options(search_on)
-                                values ('""" + fruit_selected  + """')"""
+                                values ('""" + search_on  + """')"""
                 st.write(UpdtSQlCmd)
-                ###session.sql(UpdtSQlCmd).collect()
-                st.divider()
-                SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
-                            values ('""" + ingredients_str + """','""" + NamedYourDrink + """')"""
-                ### Start the sql command to insert the rows
-                st.write(SQlCmd)
-                ###session.sql(UpdtSQlCmd).collect()
-                ### this is the command to stop further execution when troubleshooting
-                ### st.stop()
-                start_order=st.button('Submit order')
-                if start_order:
-                    session.sql(SQlCmd).collect()
-                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                    sucessMsg=(f"Your smoothie {NamedYourDrink} is ordered! {timestamp}")
-                    st.write(sucessMsg)
-                    st.success(sucessMsg, icon="✅") 
+                ##ession.sql(UpdtSQlCmd).collect()
             else: 
                 st.write('The fruit Does not exist in our database')
 
+        if NamedYourDrink:
+            st.divider()
+            SQlCmd= """ insert into smoothies.public.orders(ingredients,name_on_order)
+                        values ('""" + ingredients_str + """','""" + NamedYourDrink + """')"""
+            ### Start the sql command to insert the rows
+            st.write(SQlCmd)
+            start_order=st.button('Submit order')
+            if start_order:
+                session.sql(SQlCmd).collect()
+                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                sucessMsg=(f"Your smoothie {NamedYourDrink} is ordered! {timestamp}")
+                st.write(sucessMsg)
+                st.success(sucessMsg, icon="✅") 
+
         ##create your button to clear the state of the multiselect
         st.button("Clear form", on_click=clear_form)
+
+        ### this is the command to stop further execution when troubleshooting
+        ### st.stop()
