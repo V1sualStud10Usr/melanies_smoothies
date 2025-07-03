@@ -56,7 +56,7 @@ allFruits = st.checkbox("Select all")
 if (allFruits):
     ingredients_list = st.multiselect("Select all:",df.select(col("FRUIT_NAME")),df.select(col("FRUIT_NAME")),key="iMultiSelect",max_selections=5)
 else:
-####    selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
+#### selected_options = container.multiselect("choose up to 5 ingredients:", df.select(col("FRUIT_NAME")), key="iMultiSelect", max_selections=5)
     ingredients_list = st.multiselect('Choose up to 5 ingredients:',df,max_selections=5)
 
 ## check if the selected options array is empty
